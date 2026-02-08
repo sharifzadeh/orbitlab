@@ -1,12 +1,353 @@
 <!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>OrbitLab</title>
-  </head>
-  <body>
-    <h1>OrbitLab</h1>
-    <p><a href="https://orbitsim.dream-on.space">OrbitSim</a></p>
-    <p><a href="https://orbitdsp.dream-on.space">OrbitDSP</a></p>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OrbitLab — F´ demos: OrbitSim + OrbitDSP</title>
+  <meta name="description" content="OrbitLab is a small hub for F´ (F Prime) demos on Raspberry Pi: OrbitSim (orbital dynamics) and OrbitDSP (signal processing & fault injection)." />
+
+  <style>
+    :root{
+      --bg0:#070b14;
+      --bg1:#0b1220;
+      --card: rgba(255,255,255,.05);
+      --card2: rgba(255,255,255,.08);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --line: rgba(255,255,255,.12);
+      --shadow: 0 18px 55px rgba(0,0,0,.45);
+
+      --gold:#d7a44a;
+      --blue:#7aa8ff;
+
+      --radius: 18px;
+      --radius2: 26px;
+      --max: 1120px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(1100px 520px at 18% 8%, rgba(215,164,74,.18), transparent 58%),
+        radial-gradient(900px 480px at 92% 12%, rgba(122,168,255,.16), transparent 60%),
+        radial-gradient(1100px 700px at 50% 120%, rgba(255,255,255,.06), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      min-height:100vh;
+    }
+    a{ color:inherit; text-decoration:none; }
+    .wrap{ max-width: var(--max); margin: 0 auto; padding: 28px 18px 70px; }
+
+    /* Topbar */
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px;
+      padding:14px 16px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .brand{ display:flex; align-items:center; gap:12px; min-width: 240px; }
+    .logo{
+      width:42px; height:42px; border-radius: 13px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.03);
+      box-shadow: 0 12px 28px rgba(0,0,0,.35);
+      object-fit: cover;
+    }
+    .brand h1{ margin:0; font-size:16px; line-height:1.15; letter-spacing:.2px; }
+    .brand p{ margin:0; font-size:12.5px; color: var(--muted); }
+
+    .nav{ display:flex; gap:10px; flex-wrap: wrap; justify-content:flex-end; }
+    .pill{
+      font-size:13px;
+      padding:8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      transition: .15s ease;
+      color: rgba(255,255,255,.78);
+    }
+    .pill:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.04);
+      border-color: rgba(255,255,255,.22);
+    }
+
+    /* Hero */
+    .hero{
+      margin-top:18px;
+      border:1px solid var(--line);
+      border-radius: var(--radius2);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      padding: 22px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .watermark{
+      position:absolute;
+      right:-120px;
+      top:-110px;
+      width: 560px;
+      opacity: .07;
+      pointer-events:none;
+      transform: rotate(10deg);
+      filter: saturate(.95) contrast(1.05);
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:8px 11px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      color: rgba(255,255,255,.70);
+      font-size: 12.5px;
+    }
+    .dot{
+      width:9px; height:9px; border-radius:50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 3px rgba(215,164,74,.18);
+    }
+    .hero h2{
+      margin: 14px 0 10px;
+      font-size: 40px;
+      line-height:1.05;
+      letter-spacing:-.02em;
+    }
+    .hero p{
+      margin:0;
+      max-width: 880px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .btnrow{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:16px;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:10px;
+      padding:11px 14px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      font-size: 14px;
+      transition: .15s ease;
+      color: rgba(255,255,255,.88);
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.04);
+      border-color: rgba(255,255,255,.22);
+    }
+    .btn.primary{
+      background: linear-gradient(180deg, rgba(215,164,74,.30), rgba(215,164,74,.14));
+      border-color: rgba(215,164,74,.42);
+    }
+    .btn.primary:hover{
+      background: linear-gradient(180deg, rgba(215,164,74,.36), rgba(215,164,74,.18));
+    }
+
+    /* Grid */
+    .grid{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 900px){
+      .hero h2{ font-size: 32px; }
+      .grid{ grid-template-columns: 1fr; }
+      .nav{ justify-content:flex-start; }
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.04);
+      box-shadow: 0 14px 40px rgba(0,0,0,.30);
+      backdrop-filter: blur(10px);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card h3{ margin:0 0 8px; font-size: 18px; letter-spacing:.1px; }
+    .card p{ margin:0; color: var(--muted); line-height:1.6; font-size: 14.5px; }
+
+    .tagrow{ margin-top: 12px; display:flex; flex-wrap:wrap; gap:8px; }
+    .tag{
+      font-family: var(--mono);
+      font-size: 12px;
+      color: rgba(255,255,255,.78);
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+
+    .actions{ margin-top: 14px; display:flex; gap:10px; flex-wrap:wrap; }
+    .actions .btn{ padding:9px 12px; font-size: 13.5px; border-radius: 11px; }
+
+    .accentline{
+      height: 2px;
+      width: 90px;
+      border-radius: 99px;
+      margin: 12px 0 10px;
+      background: linear-gradient(90deg, rgba(215,164,74,.9), rgba(122,168,255,.85));
+      opacity: .8;
+    }
+
+    .section{
+      margin-top: 14px;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.03);
+      box-shadow: 0 12px 38px rgba(0,0,0,.22);
+      padding: 16px 18px;
+    }
+    .section h4{
+      margin:0 0 10px;
+      font-size: 13px;
+      letter-spacing:.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.62);
+    }
+    .mono{
+      font-family: var(--mono);
+      font-size: 12.8px;
+      line-height: 1.6;
+      color: rgba(255,255,255,.82);
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding: 14px;
+      overflow:auto;
+    }
+
+    .footer{
+      margin-top: 18px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      color: rgba(255,255,255,.58);
+      font-size: 12.5px;
+      padding: 12px 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <img class="logo" src="assets/dream-on-space-logo.png" alt="dream-on.space logo">
+        <div>
+          <h1>OrbitLab</h1>
+          <p>F´ demos on Raspberry Pi — OrbitSim + OrbitDSP</p>
+        </div>
+      </div>
+
+      <div class="nav">
+        <a class="pill" href="https://orbitlab.dream-on.space/" rel="noreferrer">Home</a>
+        <a class="pill" href="https://orbitsim.dream-on.space/" target="_blank" rel="noreferrer">OrbitSim</a>
+        <a class="pill" href="https://orbitdsp.dream-on.space/" target="_blank" rel="noreferrer">OrbitDSP</a>
+        <a class="pill" href="#quickstart">Quick Start</a>
+      </div>
+    </div>
+
+    <div class="hero">
+      <img class="watermark" src="assets/dream-on-space-logo.png" alt="" aria-hidden="true">
+      <div class="badge"><span class="dot"></span> Commands • Telemetry • Events • Deterministic scheduling • Hardware feedback</div>
+      <h2>Physics → Flight Software → Mission-style observability.</h2>
+      <p>
+        OrbitLab is a lightweight hub for two compact NASA JPL F´ (F Prime) demos.
+        OrbitSim makes orbital dynamics “mission-real” through command/telemetry loops and deterministic timing.
+        OrbitDSP brings signal processing + fault injection into the same flight-software pattern.
+      </p>
+
+      <div class="btnrow">
+        <a class="btn primary" href="https://orbitsim.dream-on.space/" target="_blank" rel="noreferrer">Explore OrbitSim</a>
+        <a class="btn primary" href="https://orbitdsp.dream-on.space/" target="_blank" rel="noreferrer">Explore OrbitDSP</a>
+        <a class="btn" href="https://github.com/sharifzadeh" target="_blank" rel="noreferrer">GitHub profile</a>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>OrbitSim</h3>
+        <div class="accentline"></div>
+        <p>
+          Orbit simulation inside F´: scheduled orbit propagation, command-driven operation,
+          telemetry streams, and event logs — designed for teaching and mission-style demos.
+        </p>
+
+        <div class="tagrow">
+          <span class="tag">orbital dynamics</span>
+          <span class="tag">F´ scheduler</span>
+          <span class="tag">TLM + events</span>
+          <span class="tag">Raspberry Pi</span>
+        </div>
+
+        <div class="actions">
+          <a class="btn" href="https://orbitsim.dream-on.space/" target="_blank" rel="noreferrer">Open site</a>
+          <a class="btn" href="https://github.com/sharifzadeh/FPrime-OrbitSim" target="_blank" rel="noreferrer">GitHub</a>
+          <a class="btn" href="https://www.youtube.com/" target="_blank" rel="noreferrer" title="Optional: add your OrbitSim video URL">Video</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>OrbitDSP</h3>
+        <div class="accentline"></div>
+        <p>
+          Signal processing + fault injection demo in F´: controllable noise model, filter families,
+          and mission-ops observability, with optional hardware LED status.
+        </p>
+
+        <div class="tagrow">
+          <span class="tag">DSP filters</span>
+          <span class="tag">noise model</span>
+          <span class="tag">fault injection</span>
+          <span class="tag">telemetry</span>
+        </div>
+
+        <div class="actions">
+          <a class="btn" href="https://orbitdsp.dream-on.space/" target="_blank" rel="noreferrer">Open site</a>
+          <a class="btn" href="https://github.com/sharifzadeh/FPrime-OrbitDSP" target="_blank" rel="noreferrer">GitHub</a>
+          <a class="btn" href="https://www.youtube.com/watch?v=GmwaoRpWrjc" target="_blank" rel="noreferrer">Video</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="quickstart">
+      <h4>Quick Start</h4>
+      <div class="mono">
+1) Pick a demo: OrbitSim or OrbitDSP
+2) Run the flight software build (F´) + deployment
+3) Drive behavior via commands
+4) Observe telemetry + events (mission-ops style)
+5) (Optional) link outputs to hardware (LED/GPIO) for live demos
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>© <span id="y"></span> dream-on.space — OrbitLab</div>
+      <div>Built for fast demos: “show, don’t explain” in under 5 minutes.</div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("y").textContent = new Date().getFullYear();
+  </script>
+</body>
 </html>
